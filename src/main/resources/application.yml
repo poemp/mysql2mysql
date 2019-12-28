@@ -1,0 +1,13 @@
+spring:
+  source:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/model?characterEncoding=UTF-8
+    username: root
+    password: 123456
+  target:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/app?characterEncoding=UTF-8
+    username: root
+    password: 123456
+  trasform:
+    tables: tables1,table2
