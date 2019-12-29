@@ -1,4 +1,4 @@
-package org.poem.config.target;
+package org.poem.config.datasource.target;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Data;
@@ -17,6 +17,7 @@ import javax.sql.DataSource;
 
 /**
  * 目标数据库
+ * @author sangfor
  */
 @Configuration
 @Component

@@ -1,13 +1,16 @@
 spring:
+  #数据来源库
   source:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/model?characterEncoding=UTF-8
-    username: root
-    password: 123456
+    url: jdbc:mysql://mysql:3306/dinner?characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&autoReconnect=true&rewriteBatchedStatements=true&serverTimezone=Asia/Shanghai
+    username: bigdata
+    password: cdzg123!@#
+    #目标数据库
   target:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/app?characterEncoding=UTF-8
+    url: jdbc:mysql://test-mysql:11007/warehouse_source?characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&autoReconnect=true&rewriteBatchedStatements=true&serverTimezone=Asia/Shanghai
     username: root
-    password: 123456
+    password: ZGdc@2019
+    # 需要传输的表
   trasform:
-    tables: tables1,table2
+    tables: t_order_meal,t_revenue_info
