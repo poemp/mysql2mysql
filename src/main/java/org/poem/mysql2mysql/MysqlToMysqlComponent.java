@@ -58,9 +58,10 @@ public class MysqlToMysqlComponent {
     private void createTable(DataTransformTaskVO dataTransformVO, JdbcTemplate sourceJdbc, JdbcTemplate targetJdbc) {
         //来源表
         String schema = ContextDatabase.getSourceCatalog();
+        String informationSchema = "select COLUMN_NAME,DATA_TYPE,IS_NULLABLE, COLUMN_TYPE from information_schema.COLUMNS where table_name='"
+                + dataTransformVO.getTable() + "' and  TABLE_SCHEMA = '" + schema + "'";
         List<Map<String, Object>> colums =
-                sourceJdbc.queryForList("select COLUMN_NAME,DATA_TYPE,IS_NULLABLE, COLUMN_TYPE from information_schema.COLUMNS where table_name='"
-                        + dataTransformVO.getTable() + "' and  TABLE_SCHEMA = '" + schema + "'");
+                sourceJdbc.queryForList(informationSchema);
 
         StringBuilder sqlStr = new StringBuilder("-- ----------------------------\n");
         sqlStr.append("-- Table structure for ").append(dataTransformVO.getTable()).append("\n");
@@ -69,7 +70,11 @@ public class MysqlToMysqlComponent {
 
         List<String> colunmsList = Lists.newArrayList();
         for (Map<String, Object> colum : colums) {
-            colunmsList.add("`" + colum.get("COLUMN_NAME") + "`  " + colum.get("COLUMN_TYPE") + " DEFAULT NULL ");
+            if ("timestamp".equalsIgnoreCase(String.valueOf(colum.get("COLUMN_TYPE")))){
+                colunmsList.add("`" + colum.get("COLUMN_NAME") + "`  " + colum.get("COLUMN_TYPE") + " NULL DEFAULT NULL ");
+            }else {
+                colunmsList.add("`" + colum.get("COLUMN_NAME") + "`  " + colum.get("COLUMN_TYPE") + " DEFAULT NULL ");
+            }
         }
         sqlStr.append(String.join(",\n\t\t", colunmsList));
         sqlStr.append(" \n)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ").append(";").append("\n");
