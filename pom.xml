@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.poem</groupId>
-    <artifactId>myql2mysql</artifactId>
+    <artifactId>mysql2mysql</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>myql2mysql</name>
     <description>mysql to mysql</description>
