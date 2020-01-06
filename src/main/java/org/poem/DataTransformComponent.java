@@ -53,7 +53,7 @@ public class DataTransformComponent implements CommandLineRunner {
      * 启动的时候执行该方法，或者是使用ApplicationListener，在启动的时候执行该方法
      * 具体使用见：http://blog.csdn.net/liuchuanhong1/article/details/77568187
      */
-    @Scheduled(cron = "0 0/1 * * * ? ")
+    @Scheduled(cron = "0 0/7 * * * ? ")
     public void schedule() throws SQLException {
         MysqlToMysqlComponent mysqlToMysqlComponent = new MysqlToMysqlComponent();
         DataTransformTaskVO dataTransformVO;

@@ -48,10 +48,14 @@ public class SourceDataSource {
         dataSource.setUsername(username);
         dataSource.setPassword(password);
         dataSource.setMaximumPoolSize(30);
-        dataSource.setConnectionTestQuery("select 1");
         dataSource.addDataSourceProperty("cachePrepStmts", "true");
-        dataSource.addDataSourceProperty("prepStmtCacheSize", "250");
+        dataSource.addDataSourceProperty("prepStmtCacheSize", "500");
         dataSource.addDataSourceProperty("prepStmtCacheSqlLimit", "5000");
+        dataSource.setIdleTimeout(300000);
+//        dataSource.setConnectionTimeout(60000);
+        dataSource.setValidationTimeout(60000);
+        dataSource.setConnectionTestQuery("select 1");
+        dataSource.setMaxLifetime(600000);
         return dataSource;
     }
 
