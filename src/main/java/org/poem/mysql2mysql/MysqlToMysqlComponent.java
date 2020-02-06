@@ -7,6 +7,7 @@ import org.poem.vo.DataTransformTaskVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.util.CollectionUtils;
 
 import java.sql.Date;
 import java.sql.SQLException;
@@ -45,7 +46,7 @@ public class MysqlToMysqlComponent {
      *
      * @param dataTransformVO
      */
-    public void importData(DataTransformTaskVO dataTransformVO,JdbcTemplate sourceJdbc , JdbcTemplate targetJdbc) throws SQLException {
+    public void importData(DataTransformTaskVO dataTransformVO, JdbcTemplate sourceJdbc, JdbcTemplate targetJdbc) throws SQLException {
         createTable(dataTransformVO, sourceJdbc, targetJdbc);
         exportData(dataTransformVO, sourceJdbc, targetJdbc);
     }
@@ -59,8 +60,8 @@ public class MysqlToMysqlComponent {
         //来源表
         String schema = ContextDatabase.getSourceCatalog();
         List<Map<String, Object>> colums =
-                sourceJdbc.queryForList("select COLUMN_NAME,DATA_TYPE,IS_NULLABLE, COLUMN_TYPE from information_schema.COLUMNS where table_name='"
-                        + dataTransformVO.getTable() + "' and  TABLE_SCHEMA = '" + schema + "'");
+                sourceJdbc.queryForList("SELECT COLUMN_NAME,DATA_TYPE,IS_NULLABLE, COLUMN_TYPE,COLUMN_KEY FROM information_schema.COLUMNS WHERE TABLE_NAME='"
+                        + dataTransformVO.getTable() + "' AND  TABLE_SCHEMA = '" + schema + "'");
 
         StringBuilder sqlStr = new StringBuilder("-- ----------------------------\n");
         sqlStr.append("-- Table structure for ").append(dataTransformVO.getTable()).append("\n");
@@ -68,8 +69,22 @@ public class MysqlToMysqlComponent {
         sqlStr.append("CREATE TABLE IF NOT EXISTS  `").append(dataTransformVO.getTable()).append("` (").append("\n\t\t");
 
         List<String> colunmsList = Lists.newArrayList();
+        List<String> keyList = Lists.newArrayList();
         for (Map<String, Object> colum : colums) {
-            colunmsList.add("`" + colum.get("COLUMN_NAME") + "`  " + colum.get("COLUMN_TYPE") + " DEFAULT NULL ");
+            if ("timestamp".equalsIgnoreCase(String.valueOf(colum.get("COLUMN_TYPE")))) {
+                colunmsList.add("`" + colum.get("COLUMN_NAME") + "`  " + colum.get("COLUMN_TYPE") + " NULL DEFAULT NULL ");
+            } else {
+                colunmsList.add("`" + colum.get("COLUMN_NAME") + "`  " + colum.get("COLUMN_TYPE") + " DEFAULT NULL ");
+            }
+            if (null != colum.get("COLUMN_KEY") && "PRI".equals(String.valueOf(colum.get("COLUMN_KEY")))) {
+                keyList.add(String.valueOf(colum.get("COLUMN_NAME")));
+            }
+        }
+        if (!CollectionUtils.isEmpty(keyList)) {
+            for (String s : keyList) {
+                colunmsList.add("KEY `" + s + "` (`" + s + "`)");
+            }
+
         }
         sqlStr.append(String.join(",\n\t\t", colunmsList));
         sqlStr.append(" \n)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ").append(";").append("\n");
@@ -137,7 +152,7 @@ public class MysqlToMysqlComponent {
         Map<String, String> typeZip = DataSourceDriverHelper.zipColunmTypes(colnums, types);
         Map<String, Object> metadatum;
         StringBuilder sql = new StringBuilder();
-        int  sequence = 0;
+        int sequence = 0;
         for (int index = 0; index < metadata.size(); index++) {
             metadatum = metadata.get(index);
             if (index % (MAX_SIZE / 2) == 0) {
@@ -145,7 +160,7 @@ public class MysqlToMysqlComponent {
                     sql.replace(sql.lastIndexOf(","), sql.lastIndexOf(",") + 1, "");
                     insertLists.add(sql.toString());
                 }
-                sql =  new StringBuilder().append(" INSERT  INTO `").append(table).append("` (`")
+                sql = new StringBuilder().append(" INSERT  INTO `").append(table).append("` (`")
                         .append(String.join("`,`", colnums)).append("`").append(")")
                         .append(" VALUES  ");
                 sequence = 0;
@@ -215,13 +230,14 @@ public class MysqlToMysqlComponent {
             if (sequence == 0 || index % (MAX_SIZE / 2) != 0) {
                 sql.append(",");
             }
-            sequence ++;
+            sequence++;
         }
         sql.replace(sql.lastIndexOf(","), sql.lastIndexOf(",") + 1, "");
         insertLists.add(sql.toString());
 
         return insertLists;
     }
+
     /**
      * 批量插入的mysql中
      *
