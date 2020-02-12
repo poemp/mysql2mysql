@@ -19,9 +19,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author poem
  */
-public class MysqlToMysqlComponent {
+public class MysqlTransformOutComponent {
 
-    private static final Logger logger = LoggerFactory.getLogger(MysqlToMysqlComponent.class);
+    private static final Logger logger = LoggerFactory.getLogger(MysqlTransformOutComponent.class);
 
     private static final long MAX_SIZE = 10000;
 
@@ -61,7 +61,7 @@ public class MysqlToMysqlComponent {
         String schema = ContextDatabase.getSourceCatalog();
         List<Map<String, Object>> colums =
                 sourceJdbc.queryForList("SELECT COLUMN_NAME,DATA_TYPE,IS_NULLABLE, COLUMN_TYPE,COLUMN_KEY FROM information_schema.COLUMNS WHERE TABLE_NAME='"
-                        + dataTransformVO.getTable() + "' AND  TABLE_SCHEMA = '" + schema + "'");
+                        + dataTransformVO.getTable() + "' AND  TABLE_SCHEMA = '" + schema + " '");
 
         StringBuilder sqlStr = new StringBuilder("-- ----------------------------\n");
         sqlStr.append("-- Table structure for ").append(dataTransformVO.getTable()).append("\n");

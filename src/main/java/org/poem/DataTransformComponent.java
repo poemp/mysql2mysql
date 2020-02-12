@@ -2,7 +2,7 @@ package org.poem;
 
 import lombok.Data;
 import org.poem.config.table.TransformTables;
-import org.poem.mysql2mysql.MysqlToMysqlComponent;
+import org.poem.mysql2mysql.MysqlTransformOutComponent;
 import org.poem.vo.DataTransformTaskVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,9 @@ public class DataTransformComponent implements CommandLineRunner {
      */
     private static final ConcurrentHashMap<String, String> LOCK_MAP = new ConcurrentHashMap<String, String>();
 
-    public DataTransformComponent(@Qualifier("sourceJdbcTemplate") JdbcTemplate sourceJdbc, @Qualifier("targetJdbcTemplate") JdbcTemplate targetJdbc, TransformTables transformTables) {
+    public DataTransformComponent(@Qualifier("sourceJdbcTemplate") JdbcTemplate sourceJdbc,
+                                  @Qualifier("targetJdbcTemplate") JdbcTemplate targetJdbc,
+                                  TransformTables transformTables) {
         this.sourceJdbc = sourceJdbc;
         this.targetJdbc = targetJdbc;
         this.transformTables = transformTables;
@@ -53,9 +55,9 @@ public class DataTransformComponent implements CommandLineRunner {
      * 启动的时候执行该方法，或者是使用ApplicationListener，在启动的时候执行该方法
      * 具体使用见：http://blog.csdn.net/liuchuanhong1/article/details/77568187
      */
-    @Scheduled(cron = "0 0/1 * * * ? ")
+    @Scheduled(cron = "0 0/7 * * * ? ")
     public void schedule() throws SQLException {
-        MysqlToMysqlComponent mysqlToMysqlComponent = new MysqlToMysqlComponent();
+        MysqlTransformOutComponent mysqlTransformOutComponent = new MysqlTransformOutComponent();
         DataTransformTaskVO dataTransformVO;
         String tables = transformTables.getTables();
         if (!StringUtils.isEmpty(tables)) {
@@ -67,7 +69,7 @@ public class DataTransformComponent implements CommandLineRunner {
                         logger.info("Start Export Table {}, {}", t, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss ")));
                         dataTransformVO = new DataTransformTaskVO();
                         dataTransformVO.setTable(t);
-                        mysqlToMysqlComponent.importData(dataTransformVO, sourceJdbc, targetJdbc);
+                        mysqlTransformOutComponent.importData(dataTransformVO, sourceJdbc, targetJdbc);
                         logger.info("End Export Table {}, {}", t, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss ")));
                     } catch (Exception e) {
                         logger.error(e.getMessage(), e);

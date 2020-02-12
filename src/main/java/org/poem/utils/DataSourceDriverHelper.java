@@ -27,6 +27,8 @@ public class DataSourceDriverHelper {
             return "org.apache.hive.jdbc.HiveDriver";
         } else if (url.startsWith("jdbc:oracle:thin")) {
             return "oracle.jdbc.driver.OracleDriver";
+        } else if (url.startsWith("jdbc:postgresql")) {
+            return "org.postgresql.Driver";
         }
 
         return "";
@@ -34,16 +36,17 @@ public class DataSourceDriverHelper {
 
     /**
      * 数据库
+     *
      * @param url
      * @return
      */
-    public static String getCatalog(String url){
+    public static String getCatalog(String url) {
         int idex = url.lastIndexOf("?");
         char[] chars = url.toCharArray();
         char x = "/".toCharArray()[0];
-        for(int i =  idex ; i >= 0; i--){
-            if (chars[i] == x){
-                return  url.substring(i + 1, idex);
+        for (int i = idex; i >= 0; i--) {
+            if (chars[i] == x) {
+                return url.substring(i + 1, idex);
             }
         }
         return "";
@@ -81,6 +84,8 @@ public class DataSourceDriverHelper {
             return EnumDataType.HIVE;
         } else if (url.startsWith("jdbc:oracle:thin")) {
             return EnumDataType.ORACLE;
+        } else if (url.startsWith("jdbc:postgresql")) {
+            return EnumDataType.POSTGRES;
         }
 
         return EnumDataType.NULL;

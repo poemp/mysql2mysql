@@ -20,7 +20,11 @@ public enum EnumDataType {
     /**
      * oracle
      */
-    ORACLE("oracle");
+    ORACLE("oracle"),
+    /**
+     * postgres数据库
+     */
+    POSTGRES("postgres");
 
     private String type;
 

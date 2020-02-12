@@ -17,6 +17,7 @@ import javax.sql.DataSource;
 
 /**
  * 目标数据库
+ *
  * @author sangfor
  */
 @Configuration
@@ -33,6 +34,11 @@ public class TargetAppDataSource {
     private String password;
 
 
+    /**
+     * 数据库连接信息
+     *
+     * @return
+     */
     @Bean(name = "targetHikariData")
     public DataSource targetHikariDataSource() {
         logger.info("\nInit target  DataBase [" + DataSourceDriverHelper.getDatasourceType(url) + "] : " +
@@ -47,13 +53,26 @@ public class TargetAppDataSource {
         dataSource.setUsername(username);
         dataSource.setPassword(password);
         dataSource.setMaximumPoolSize(30);
+        dataSource.addDataSourceProperty("cachePrepStmts", "true");
+        dataSource.addDataSourceProperty("prepStmtCacheSize", "500");
+        dataSource.addDataSourceProperty("prepStmtCacheSqlLimit", "5000");
+        dataSource.setIdleTimeout(300000);
+        dataSource.setValidationTimeout(60000);
         dataSource.setConnectionTestQuery("select 1");
+        dataSource.setMaxLifetime(600000);
         return dataSource;
     }
 
+    /**
+     * 数据的数据类型
+     *
+     * @param targetHikariDataSource
+     * @return
+     */
     @Bean(name = "targetJdbcTemplate")
     public JdbcTemplate targetJdbcExcuetor(@Qualifier("targetHikariData") DataSource targetHikariDataSource) {
         ContextDatabase.setTargetCatalog(DataSourceDriverHelper.getCatalog(url));
+        ContextDatabase.setTargetSchema(DataSourceDriverHelper.getDatasourceType(url));
         return new JdbcTemplate(targetHikariDataSource);
     }
 
