@@ -165,6 +165,9 @@ public class SqlUtils {
      */
     public static Map<String, String> zipColumnTypes(List<String> columns, List<String> columnsType) {
         Map<String, String> map = Maps.newHashMap();
+        if (columns.size() != columnsType.size()) {
+            return map;
+        }
         for (int i = 0; i < columns.size(); i++) {
             map.put(columns.get(i), columnsType.get(i));
         }
@@ -188,15 +191,28 @@ public class SqlUtils {
      * 创建数据表的sql
      *
      * @param tableName    表
-     * @param colsDataType 数据库的类型实例
-     * @param enumDataType 数据库的类型
+     * @param colsDataType 列名字和列的类型的映射关系
+     * @param enumDataType 创建表的数据库类型
      * @return
      */
     public static String getCreateTableSql(String tableName, Map<String, String> colsDataType, EnumDataType enumDataType) {
+        return getCreateTableSql(tableName, colsDataType, null, enumDataType);
+    }
+
+    /**
+     * 创建插入表格的sql
+     *
+     * @param tableName    表名字
+     * @param colsDataType 列名字和列的类型的映射关系
+     * @param colsIndexKey 列名字与列的索引的映射管理
+     * @param enumDataType 创建表的数据库类型
+     * @return 创建的sql
+     */
+    public static String getCreateTableSql(String tableName, Map<String, String> colsDataType, Map<String, String> colsIndexKey, EnumDataType enumDataType) {
         if (EnumDataType.MYSQL.getType().equalsIgnoreCase(enumDataType.getType())) {
-            return SqlHelperHandler.getCreateMysqlTableSql(tableName, colsDataType, null);
+            return SqlHelperHandler.getCreateMysqlTableSql(tableName, colsDataType, colsIndexKey);
         } else if (EnumDataType.POSTGRES.getType().equalsIgnoreCase(enumDataType.getType())) {
-            return SqlHelperHandler.getPostgresTableSql(tableName, colsDataType, null);
+            return SqlHelperHandler.getPostgresTableSql(tableName, colsDataType, colsIndexKey);
         }
         return getCreateTableSql(tableName, colsDataType);
     }

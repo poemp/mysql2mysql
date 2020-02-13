@@ -23,18 +23,26 @@ class SqlHelperHandler {
     private static String getPostgresColType(String type) {
         switch (type.trim().toLowerCase()) {
             case "string":
+            case "varchar":
+            case "longtext":
                 return "varchar(500)";
             case "integer":
             case "int":
                 return "int4";
             case "double":
             case "float":
+            case "decimal":
                 return "numeric(20,2 )";
             case "long":
+            case "serial":
                 return "int8";
             case "timestamp":
             case "date":
                 return "timestamp(6)";
+            case "bit":
+                return "bit";
+            case "text":
+                return "text";
             default:
                 throw new RuntimeException("【Postgres】没有类型：" + type);
         }
@@ -49,6 +57,7 @@ class SqlHelperHandler {
     private static String getMysqlColType(String type) {
         switch (type.trim().toLowerCase()) {
             case "string":
+            case "varchar":
                 return "varchar(200)";
             case "integer":
             case "int":
@@ -57,10 +66,15 @@ class SqlHelperHandler {
             case "float":
                 return "double(20,2 )";
             case "long":
+            case "bigint":
                 return "bigint(20)";
             case "timestamp":
             case "date":
                 return "timestamp";
+            case "bit":
+                return "bit";
+            case "text":
+                return "text";
             default:
                 throw new RuntimeException("【Mysql】没有类型：" + type);
         }

@@ -3,7 +3,9 @@ package org.poem.mysql2mysql;
 import com.google.common.collect.Lists;
 import org.poem.config.ContextDatabase;
 import org.poem.utils.DataSourceDriverHelper;
+import org.poem.utils.SqlUtils;
 import org.poem.vo.DataTransformTaskVO;
+import org.poem.vo.EnumDataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -51,6 +53,8 @@ public class MysqlTransformOutComponent {
         exportData(dataTransformVO, sourceJdbc, targetJdbc);
     }
 
+
+
     /**
      * 创建表
      *
@@ -61,43 +65,33 @@ public class MysqlTransformOutComponent {
         String schema = ContextDatabase.getSourceCatalog();
         List<Map<String, Object>> colums =
                 sourceJdbc.queryForList("SELECT COLUMN_NAME,DATA_TYPE,IS_NULLABLE, COLUMN_TYPE,COLUMN_KEY FROM information_schema.COLUMNS WHERE TABLE_NAME='"
-                        + dataTransformVO.getTable() + "' AND  TABLE_SCHEMA = '" + schema + " '");
+                        + dataTransformVO.getTable() + "' AND  TABLE_SCHEMA = '" + schema + "'");
 
-        StringBuilder sqlStr = new StringBuilder("-- ----------------------------\n");
-        sqlStr.append("-- Table structure for ").append(dataTransformVO.getTable()).append("\n");
-        sqlStr.append("-- ----------------------------\n");
-        sqlStr.append("CREATE TABLE IF NOT EXISTS  `").append(dataTransformVO.getTable()).append("` (").append("\n\t\t");
-
-        List<String> colunmsList = Lists.newArrayList();
+        List<String> colunmsType = Lists.newArrayList();
+        List<String> columnNames = Lists.newArrayList();
         List<String> keyList = Lists.newArrayList();
         for (Map<String, Object> colum : colums) {
-            if ("timestamp".equalsIgnoreCase(String.valueOf(colum.get("COLUMN_TYPE")))) {
-                colunmsList.add("`" + colum.get("COLUMN_NAME") + "`  " + colum.get("COLUMN_TYPE") + " NULL DEFAULT NULL ");
-            } else {
-                colunmsList.add("`" + colum.get("COLUMN_NAME") + "`  " + colum.get("COLUMN_TYPE") + " DEFAULT NULL ");
-            }
+            columnNames.add(colum.get("COLUMN_NAME")+"");
+            colunmsType.add(colum.get("DATA_TYPE") + "");
             if (null != colum.get("COLUMN_KEY") && "PRI".equals(String.valueOf(colum.get("COLUMN_KEY")))) {
                 keyList.add(String.valueOf(colum.get("COLUMN_NAME")));
             }
         }
-        if (!CollectionUtils.isEmpty(keyList)) {
-            for (String s : keyList) {
-                colunmsList.add("KEY `" + s + "` (`" + s + "`)");
-            }
-
-        }
-        sqlStr.append(String.join(",\n\t\t", colunmsList));
-        sqlStr.append(" \n)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ").append(";").append("\n");
+        Map<String, String> zipColumnTypes = SqlUtils.zipColumnTypes(columnNames, colunmsType);
+        Map<String, String> zipColumnKey = SqlUtils.zipColumnTypes(columnNames, keyList);
+        String createTableSql =  SqlUtils.getCreateTableSql(dataTransformVO.getTable(),zipColumnTypes,zipColumnKey,ContextDatabase.getTargetSchema());
 
         //目标
         targetJdbc.execute("drop table if exists " + dataTransformVO.getTable());
         if (logger.isDebugEnabled()) {
             logger.debug("[" + dataTransformVO.getTable() + "] ======================================= ");
-            logger.debug("[" + dataTransformVO.getTable() + "]\n" + sqlStr);
+            logger.debug("[" + dataTransformVO.getTable() + "]\n" + createTableSql);
             logger.debug("[" + dataTransformVO.getTable() + "] ======================================= ");
         }
-        targetJdbc.update(sqlStr.toString());
+        targetJdbc.update(createTableSql);
     }
+
+
 
 
     /**
