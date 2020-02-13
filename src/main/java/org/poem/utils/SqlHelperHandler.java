@@ -7,6 +7,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.List;
 import java.util.Map;
 
+import static com.alibaba.druid.util.FnvHash.Constants.MAX_SIZE;
 import static org.poem.utils.SqlUtils.DEFAULT_CREATE_TIME;
 
 /**
@@ -177,4 +178,194 @@ class SqlHelperHandler {
         return sqlStr.toString();
     }
 
+
+    /**
+     * 创建mysql的插入sql
+     *
+     * @param table     表
+     * @param metadata  数据列
+     * @param columns   列
+     * @param typeZip   类型
+     * @param currentNo 当前的版本
+     * @return
+     */
+    static List<String> createMysqlInsertSql(String table,
+                                             List<Map<String, Object>> metadata,
+                                             List<String> columns,
+                                             Map<String, String> typeZip,
+                                             String currentNo) {
+        List<String> insertLists = Lists.newArrayList();
+        int sequence = 0;
+        Map<String, Object> metadatum;
+        StringBuilder sql = new StringBuilder();
+        if (!columns.contains(SqlUtils.DEFAULT_CREATE_TIME)) {
+            columns.add(SqlUtils.DEFAULT_CREATE_TIME);
+        }
+        for (int index = 0; index < metadata.size(); index++) {
+            metadatum = metadata.get(index);
+            if (metadatum == null) {
+                continue;
+            }
+            metadatum.put(SqlUtils.DEFAULT_CREATE_TIME, currentNo);
+            if (index % (MAX_SIZE / 2) == 0) {
+                if (index != 0) {
+                    sql.replace(sql.lastIndexOf(","), sql.lastIndexOf(",") + 1, "");
+                    insertLists.add(sql.toString());
+                }
+                sql = new StringBuilder().append(" INSERT  INTO `").append(table).append("` (`")
+                        .append(String.join("`,`", columns)).append("`").append(")")
+                        .append(" VALUES  ");
+                sequence = 0;
+            }
+            sql.append("(");
+            for (int i = 0; i < columns.size(); i++) {
+                String column = columns.get(i);
+                String type = typeZip.get(column);
+                Object data = metadatum.get(column);
+                if ("Long".equalsIgnoreCase(type)
+                        || "Integer".equalsIgnoreCase(type)
+                        || "Float".equalsIgnoreCase(type)
+                        || "Double".equalsIgnoreCase(type)
+                        || "BigDecimal".equalsIgnoreCase(type)
+
+                ) {
+                    if ("".equals(data) || data == null) {
+                        data = 0;
+                    }
+                    sql.append(data);
+                } else if ("tinyint".equalsIgnoreCase(type)) {
+                    //bool类型
+                    sql.append(data);
+                } else {
+                    //去掉分号
+                    if (data instanceof String) {
+                        if ("".equals(data) || "null".equals(data)) {
+                            sql.append("null");
+                        } else {
+                            String item = ((String) data).replaceAll(";", "，").replaceAll("'", " ");
+                            if (item.endsWith("\\")) {
+                                item = item.replaceAll("\\\\", "\\\\\\\\");
+                            }
+                            sql.append("'").append(item).append("'");
+                        }
+                    } else {
+                        if (data == null || "".equals(data) || "null".equals(data)) {
+                            sql.append("null");
+                        } else {
+                            sql.append("'").append(data).append("'");
+                        }
+                    }
+                }
+                if (i != columns.size() - 1) {
+                    sql.append(",");
+                }
+            }
+            sql.append(")");
+            if (sequence == 0 || index % (MAX_SIZE / 2) != 0) {
+                sql.append(",");
+            }
+            sequence++;
+        }
+        if (sql.lastIndexOf(",") != -1) {
+            sql.replace(sql.lastIndexOf(","), sql.lastIndexOf(",") + 1, "");
+        }
+        insertLists.add(sql.toString());
+        return insertLists;
+    }
+
+
+
+    /**
+     * 创建mysql的插入sql
+     *
+     * @param table     表
+     * @param metadata  数据列
+     * @param columns   列
+     * @param typeZip   类型
+     * @param currentNo 当前的版本
+     * @return
+     */
+    static List<String> createPostInsertSql(String table,
+                                             List<Map<String, Object>> metadata,
+                                             List<String> columns,
+                                             Map<String, String> typeZip,
+                                             String currentNo) {
+        List<String> insertLists = Lists.newArrayList();
+        int sequence = 0;
+        Map<String, Object> metadatum;
+        StringBuilder sql = new StringBuilder();
+        if (!columns.contains(SqlUtils.DEFAULT_CREATE_TIME)) {
+            columns.add(SqlUtils.DEFAULT_CREATE_TIME);
+        }
+        for (int index = 0; index < metadata.size(); index++) {
+            metadatum = metadata.get(index);
+            if (metadatum == null) {
+                continue;
+            }
+            metadatum.put(SqlUtils.DEFAULT_CREATE_TIME, currentNo);
+            if (index % (MAX_SIZE / 2) == 0) {
+                if (index != 0) {
+                    sql.replace(sql.lastIndexOf(","), sql.lastIndexOf(",") + 1, "");
+                    insertLists.add(sql.toString());
+                }
+                sql = new StringBuilder().append(" INSERT  INTO public.").append(table).append(" (")
+                        .append(String.join(",", columns)).append("`").append(")")
+                        .append(" VALUES  ");
+                sequence = 0;
+            }
+            sql.append("(");
+            for (int i = 0; i < columns.size(); i++) {
+                String column = columns.get(i);
+                String type = typeZip.get(column);
+                Object data = metadatum.get(column);
+                if ("Long".equalsIgnoreCase(type)
+                        || "Integer".equalsIgnoreCase(type)
+                        || "Float".equalsIgnoreCase(type)
+                        || "Double".equalsIgnoreCase(type)
+                        || "BigDecimal".equalsIgnoreCase(type)
+
+                ) {
+                    if ("".equals(data) || data == null) {
+                        data = 0;
+                    }
+                    sql.append(data);
+                } else if ("tinyint".equalsIgnoreCase(type)) {
+                    //bool类型
+                    sql.append(data);
+                } else {
+                    //去掉分号
+                    if (data instanceof String) {
+                        if ("".equals(data) || "null".equals(data)) {
+                            sql.append("null");
+                        } else {
+                            String item = ((String) data).replaceAll(";", "，").replaceAll("'", " ");
+                            if (item.endsWith("\\")) {
+                                item = item.replaceAll("\\\\", "\\\\\\\\");
+                            }
+                            sql.append("'").append(item).append("'");
+                        }
+                    } else {
+                        if (data == null || "".equals(data) || "null".equals(data)) {
+                            sql.append("null");
+                        } else {
+                            sql.append("'").append(data).append("'");
+                        }
+                    }
+                }
+                if (i != columns.size() - 1) {
+                    sql.append(",");
+                }
+            }
+            sql.append(")");
+            if (sequence == 0 || index % (MAX_SIZE / 2) != 0) {
+                sql.append(",");
+            }
+            sequence++;
+        }
+        if (sql.lastIndexOf(",") != -1) {
+            sql.replace(sql.lastIndexOf(","), sql.lastIndexOf(",") + 1, "");
+        }
+        insertLists.add(sql.toString());
+        return insertLists;
+    }
 }

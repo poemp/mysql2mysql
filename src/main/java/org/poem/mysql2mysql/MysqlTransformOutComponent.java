@@ -54,7 +54,6 @@ public class MysqlTransformOutComponent {
     }
 
 
-
     /**
      * 创建表
      *
@@ -71,7 +70,7 @@ public class MysqlTransformOutComponent {
         List<String> columnNames = Lists.newArrayList();
         List<String> keyList = Lists.newArrayList();
         for (Map<String, Object> colum : colums) {
-            columnNames.add(colum.get("COLUMN_NAME")+"");
+            columnNames.add(colum.get("COLUMN_NAME") + "");
             colunmsType.add(colum.get("DATA_TYPE") + "");
             if (null != colum.get("COLUMN_KEY") && "PRI".equals(String.valueOf(colum.get("COLUMN_KEY")))) {
                 keyList.add(String.valueOf(colum.get("COLUMN_NAME")));
@@ -79,7 +78,8 @@ public class MysqlTransformOutComponent {
         }
         Map<String, String> zipColumnTypes = SqlUtils.zipColumnTypes(columnNames, colunmsType);
         Map<String, String> zipColumnKey = SqlUtils.zipColumnTypes(columnNames, keyList);
-        String createTableSql =  SqlUtils.getCreateTableSql(dataTransformVO.getTable(),zipColumnTypes,zipColumnKey,ContextDatabase.getTargetSchema());
+        String createTableSql = SqlUtils.getCreateTableSql(dataTransformVO.getTable(),
+                zipColumnTypes, zipColumnKey, ContextDatabase.getTargetSchema());
 
         //目标
         targetJdbc.execute("drop table if exists " + dataTransformVO.getTable());
@@ -90,8 +90,6 @@ public class MysqlTransformOutComponent {
         }
         targetJdbc.update(createTableSql);
     }
-
-
 
 
     /**
@@ -116,6 +114,7 @@ public class MysqlTransformOutComponent {
         if (logger.isDebugEnabled()) {
             logger.debug("[" + dataTransformVO.getTable() + "]Import Data ：" + dataSize);
         }
+        Map<String, String> zipColumnTypes = SqlUtils.zipColumnTypes(colnums, types);
         long index = (int) (dataSize / MAX_SIZE) + 1;
         for (long i = 0; i < index; i++) {
             long in = i;
@@ -125,7 +124,7 @@ public class MysqlTransformOutComponent {
                     long start = (in) * MAX_SIZE;
                     logger.info("[" + dataTransformVO.getTable() + "] SELECT * FROM " + dataTransformVO.getTable() + " LIMIT " + start + " , " + MAX_SIZE);
                     List<Map<String, Object>> rs = sourceJdbc.queryForList("SELECT * FROM " + dataTransformVO.getTable() + " LIMIT " + start + " , " + MAX_SIZE);
-                    List<String> insertSql = createMysqlInsertSql(dataTransformVO.getTable(), rs, colnums, types, isNull);
+                    List<String> insertSql = createMysqlInsertSql(dataTransformVO.getTable(), rs, colnums, zipColumnTypes);
                     batchInsertMysql(insertSql, targetJdbc, dataTransformVO);
                 }
             });
@@ -138,98 +137,12 @@ public class MysqlTransformOutComponent {
      * @param table
      * @param metadata
      * @param colnums
-     * @param types
+     * @param zipColumnTypes
      * @return
      */
-    private List<String> createMysqlInsertSql(String table, List<Map<String, Object>> metadata, List<String> colnums, List<String> types, List<String> isNull) {
-        List<String> insertLists = Lists.newArrayList();
-        Map<String, String> typeZip = DataSourceDriverHelper.zipColunmTypes(colnums, types);
-        Map<String, Object> metadatum;
-        StringBuilder sql = new StringBuilder();
-        int sequence = 0;
-        for (int index = 0; index < metadata.size(); index++) {
-            metadatum = metadata.get(index);
-            if (index % (MAX_SIZE / 2) == 0) {
-                if (index != 0) {
-                    sql.replace(sql.lastIndexOf(","), sql.lastIndexOf(",") + 1, "");
-                    insertLists.add(sql.toString());
-                }
-                sql = new StringBuilder().append(" INSERT  INTO `").append(table).append("` (`")
-                        .append(String.join("`,`", colnums)).append("`").append(")")
-                        .append(" VALUES  ");
-                sequence = 0;
-            }
-            sql.append("(");
-            for (int i = 0; i < colnums.size(); i++) {
-                String colnum = colnums.get(i);
-                String type = typeZip.get(colnum);
-                Object data = metadatum.get(colnum);
-                String nullEnable = isNull.get(i);
-                if (data == null && "NO".equalsIgnoreCase(nullEnable)) {
-                    if ("datetime".equalsIgnoreCase(type)) {
-                        data = new Date(System.currentTimeMillis());
-                    } else {
-                        data = "";
-                    }
-                } else if ("null".equals(data) && "NO".equalsIgnoreCase(nullEnable)) {
-                    data = "";
-                }
-                if ("Long".equalsIgnoreCase(type)
-                        || "Integer".equalsIgnoreCase(type)
-                        || "Float".equalsIgnoreCase(type)
-                        || "Double".equalsIgnoreCase(type)
-                        || "BigDecimal".equalsIgnoreCase(type)
-                        || "int".equalsIgnoreCase(type)
-                        || "bit".equalsIgnoreCase(type)
-                ) {
-                    if ("".equals(data) || data == null) {
-                        data = 0;
-                    } else if ("bit".equalsIgnoreCase(type)) {
-                        data = ((byte[]) data)[0];
-                    }
-                    sql.append(data);
-                } else if ("tinyint".equalsIgnoreCase(type)) {
-                    //bool类型
-                    sql.append(data);
-                } else {
-                    //去掉分号
-                    if (data instanceof String) {
-                        if ("null".equals(data)) {
-                            sql.append("null");
-                        } else {
-                            String item = ((String) data).replaceAll(";", "，").replaceAll("'", " ");
-                            if (item.endsWith("\\")) {
-                                item = item.replaceAll("\\\\", "\\\\\\\\");
-                            }
-                            sql.append("'");
-                            sql.append(item);
-                            sql.append("'");
-                        }
-                    } else {
-                        if (data == null || "".equals(data) || "null".equals(data)) {
-                            sql.append("null");
-                        } else {
-                            sql.append("'");
-                            sql.append(data);
-                            sql.append("'");
-
-                        }
-                    }
-                }
-                if (i != colnums.size() - 1) {
-                    sql.append(",");
-                }
-            }
-            sql.append(")");
-            if (sequence == 0 || index % (MAX_SIZE / 2) != 0) {
-                sql.append(",");
-            }
-            sequence++;
-        }
-        sql.replace(sql.lastIndexOf(","), sql.lastIndexOf(",") + 1, "");
-        insertLists.add(sql.toString());
-
-        return insertLists;
+    private List<String> createMysqlInsertSql(String table, List<Map<String, Object>> metadata, List<String> colnums,
+                                              Map<String, String> zipColumnTypes) {
+        return SqlUtils.createInsertSql(table, metadata, colnums, zipColumnTypes, ContextDatabase.getTargetSchema());
     }
 
     /**
@@ -239,9 +152,15 @@ public class MysqlTransformOutComponent {
      * @param targetJdbc
      */
     private void batchInsertMysql(List<String> insertSqls, JdbcTemplate targetJdbc, DataTransformTaskVO dataTransformVO) {
-        insertSqls.parallelStream().forEach(
-                targetJdbc::update
-        );
+        try {
+            for (String insertSql : insertSqls) {
+                logger.info(insertSql);
+                targetJdbc.update(insertSql);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
+        }
         logger.info("[{}] Success Sql Is {}", dataTransformVO.getTable(), insertSqls.size());
     }
 }
