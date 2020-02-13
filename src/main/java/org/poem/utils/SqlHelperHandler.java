@@ -309,7 +309,7 @@ class SqlHelperHandler {
                     insertLists.add(sql.toString());
                 }
                 sql = new StringBuilder().append(" INSERT  INTO public.").append(table).append(" (")
-                        .append(String.join(",", columns)).append("`").append(")")
+                        .append(String.join(",", columns)).append(")")
                         .append(" VALUES  ");
                 sequence = 0;
             }
