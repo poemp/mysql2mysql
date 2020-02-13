@@ -180,7 +180,7 @@ public class SqlUtils {
      * @return
      */
     public static String getCreateTableSql(String tableName, Map<String, String> colsDataType) {
-        return SqlHelperHandler.getCreateMysqlTableSql(tableName, colsDataType);
+        return SqlHelperHandler.getCreateMysqlTableSql(tableName, colsDataType, null);
     }
 
 
@@ -194,9 +194,9 @@ public class SqlUtils {
      */
     public static String getCreateTableSql(String tableName, Map<String, String> colsDataType, EnumDataType enumDataType) {
         if (EnumDataType.MYSQL.getType().equalsIgnoreCase(enumDataType.getType())) {
-            return SqlHelperHandler.getCreateMysqlTableSql(tableName, colsDataType);
+            return SqlHelperHandler.getCreateMysqlTableSql(tableName, colsDataType, null);
         } else if (EnumDataType.POSTGRES.getType().equalsIgnoreCase(enumDataType.getType())) {
-            return SqlHelperHandler.getPostgresTableSql(tableName, colsDataType);
+            return SqlHelperHandler.getPostgresTableSql(tableName, colsDataType, null);
         }
         return getCreateTableSql(tableName, colsDataType);
     }
