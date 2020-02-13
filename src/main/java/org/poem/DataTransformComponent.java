@@ -63,6 +63,7 @@ public class DataTransformComponent implements CommandLineRunner {
         if (!StringUtils.isEmpty(tables)) {
             String[] ts = tables.split(",");
             for (String t : ts) {
+                t = t.trim();
                 if (LOCK_MAP.get(t) == null) {
                     try {
                         LOCK_MAP.put(t, "1");

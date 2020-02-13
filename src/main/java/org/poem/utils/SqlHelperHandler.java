@@ -15,6 +15,7 @@ import static org.poem.utils.SqlUtils.DEFAULT_CREATE_TIME;
  */
 class SqlHelperHandler {
 
+
     /**
      * 创建
      *
@@ -23,12 +24,17 @@ class SqlHelperHandler {
      */
     private static String getPostgresColType(String type) {
         switch (type.trim().toLowerCase()) {
+            case "longtext":
+            case "text":
             case "string":
             case "varchar":
-            case "longtext":
-                return "varchar(500)";
+            case "char":
+            case "longblob":
+                return "text";
             case "integer":
             case "int":
+            case "tinyint":
+            case "smallint":
                 return "int4";
             case "double":
             case "float":
@@ -40,11 +46,11 @@ class SqlHelperHandler {
                 return "int8";
             case "timestamp":
             case "date":
+            case "datetime":
+            case "time":
                 return "timestamp(6)";
             case "bit":
                 return "bit";
-            case "text":
-                return "text";
             default:
                 throw new RuntimeException("【Postgres】没有类型：" + type);
         }
@@ -63,19 +69,26 @@ class SqlHelperHandler {
                 return "varchar(200)";
             case "integer":
             case "int":
+            case "tinyint":
+            case "smallint":
                 return "int(20)";
             case "double":
             case "float":
+            case "decimal":
                 return "double(20,2 )";
             case "long":
             case "bigint":
                 return "bigint(20)";
             case "timestamp":
             case "date":
+            case "datetime":
                 return "timestamp";
             case "bit":
                 return "bit";
+            case "longtext":
             case "text":
+            case "char":
+            case "longblob":
                 return "text";
             default:
                 throw new RuntimeException("【Mysql】没有类型：" + type);
@@ -113,10 +126,11 @@ class SqlHelperHandler {
         List<String> keyList = Lists.newArrayList();
         colsDataType.forEach(
                 (k, v) -> {
-                    if ("timestamp".equalsIgnoreCase(String.valueOf(v))) {
+                    String type = SqlHelperHandler.getMysqlColType(v);
+                    if ("timestamp".equalsIgnoreCase(type)) {
                         colunmsList.add("`" + k + "`  timestamp  NULL DEFAULT NULL ");
                     } else {
-                        colunmsList.add("`" + k + "`  " + SqlHelperHandler.getMysqlColType(v) + " DEFAULT NULL ");
+                        colunmsList.add("`" + k + "`  " + type + " DEFAULT NULL ");
                     }
                     if (colsIndexKey != null && !CollectionUtils.isEmpty(colsIndexKey)) {
                         if (null != colsIndexKey.get(String.valueOf(v)) && "PRI".equals(String.valueOf(String.valueOf(v)))) {

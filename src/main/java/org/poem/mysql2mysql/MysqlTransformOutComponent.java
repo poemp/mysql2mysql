@@ -83,11 +83,11 @@ public class MysqlTransformOutComponent {
 
         //目标
         targetJdbc.execute("drop table if exists " + dataTransformVO.getTable());
-//        if (logger.isDebugEnabled()) {
+        if (logger.isDebugEnabled()) {
             logger.info("[" + dataTransformVO.getTable() + "] ======================================= ");
             logger.info("[" + dataTransformVO.getTable() + "]\n" + createTableSql);
             logger.info("[" + dataTransformVO.getTable() + "] ======================================= ");
-//        }
+        }
         targetJdbc.update(createTableSql);
     }
 
@@ -99,7 +99,8 @@ public class MysqlTransformOutComponent {
      */
     private void exportData(DataTransformTaskVO dataTransformVO, JdbcTemplate sourceJdbc, JdbcTemplate targetJdbc) throws SQLException {
         //来源表
-        long dataSize = sourceJdbc.queryForObject("SELECT sum(1) as su FROM " + dataTransformVO.getTable(), Long.class);
+        Long sum = sourceJdbc.queryForObject("SELECT sum(1) as su FROM " + dataTransformVO.getTable(), Long.class);
+        long dataSize = sum == null ? 0 : sum;
         String schema = ContextDatabase.getSourceCatalog();
         List<Map<String, Object>> colums = sourceJdbc.queryForList("select COLUMN_NAME,DATA_TYPE,IS_NULLABLE from information_schema.COLUMNS where table_name='" + dataTransformVO.getTable() + "' and  TABLE_SCHEMA = '" + schema + "'");
         List<String> colnums = Lists.newArrayList();
@@ -154,13 +155,12 @@ public class MysqlTransformOutComponent {
     private void batchInsertMysql(List<String> insertSqls, JdbcTemplate targetJdbc, DataTransformTaskVO dataTransformVO) {
         try {
             for (String insertSql : insertSqls) {
-                logger.info(insertSql);
                 targetJdbc.update(insertSql);
             }
         } catch (Exception e) {
             e.printStackTrace();
             logger.error(e.getMessage());
         }
-        logger.info("[{}] Success Sql Is {}", dataTransformVO.getTable(), insertSqls.size());
+//        logger.info("[{}] Success Sql Is {}", dataTransformVO.getTable(), insertSqls.size());
     }
 }
