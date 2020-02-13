@@ -11,4 +11,4 @@ spring:
     password: 123456
     # 需要传输的表
   trasform:
-    tables: t_chart
+    tables: new_year_county_person_distribute

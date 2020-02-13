@@ -83,11 +83,11 @@ public class MysqlTransformOutComponent {
 
         //目标
         targetJdbc.execute("drop table if exists " + dataTransformVO.getTable());
-        if (logger.isDebugEnabled()) {
-            logger.debug("[" + dataTransformVO.getTable() + "] ======================================= ");
-            logger.debug("[" + dataTransformVO.getTable() + "]\n" + createTableSql);
-            logger.debug("[" + dataTransformVO.getTable() + "] ======================================= ");
-        }
+//        if (logger.isDebugEnabled()) {
+            logger.info("[" + dataTransformVO.getTable() + "] ======================================= ");
+            logger.info("[" + dataTransformVO.getTable() + "]\n" + createTableSql);
+            logger.info("[" + dataTransformVO.getTable() + "] ======================================= ");
+//        }
         targetJdbc.update(createTableSql);
     }
 

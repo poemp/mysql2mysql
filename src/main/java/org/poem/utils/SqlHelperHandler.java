@@ -35,6 +35,7 @@ class SqlHelperHandler {
             case "decimal":
                 return "numeric(20,2 )";
             case "long":
+            case "bigint":
             case "serial":
                 return "int8";
             case "timestamp":
@@ -124,8 +125,10 @@ class SqlHelperHandler {
                     }
                 }
         );
+        if (!colsDataType.containsKey(DEFAULT_CREATE_TIME)) {
+            colunmsList.add("`" + DEFAULT_CREATE_TIME + "`  TIMESTAMP NULL  DEFAULT NULL ");
+        }
 
-        colunmsList.add("`" + DEFAULT_CREATE_TIME + "`  TIMESTAMP NULL  DEFAULT NULL ");
         if (!CollectionUtils.isEmpty(keyList)) {
             for (String s : keyList) {
                 colunmsList.add("KEY `" + s + "` (`" + s + "`)");
@@ -165,7 +168,9 @@ class SqlHelperHandler {
                     }
                 }
         );
-        colunmsList.add("\"" + DEFAULT_CREATE_TIME + "\"  timestamp(6) ");
+        if (!colsDataType.containsKey(DEFAULT_CREATE_TIME)) {
+            colunmsList.add("\"" + DEFAULT_CREATE_TIME + "\"  timestamp(6) ");
+        }
         sqlStr.append(String.join(",\n\t\t", colunmsList));
         sqlStr.append(" \n)").append(";").append("\n");
         List<String> indexStr = Lists.newArrayList();
@@ -206,7 +211,10 @@ class SqlHelperHandler {
             if (metadatum == null) {
                 continue;
             }
-            metadatum.put(SqlUtils.DEFAULT_CREATE_TIME, currentNo);
+            if (columns.contains(DEFAULT_CREATE_TIME)) {
+                metadatum.put(SqlUtils.DEFAULT_CREATE_TIME, currentNo);
+            }
+
             if (index % (MAX_SIZE / 2) == 0) {
                 if (index != 0) {
                     sql.replace(sql.lastIndexOf(","), sql.lastIndexOf(",") + 1, "");
@@ -274,7 +282,6 @@ class SqlHelperHandler {
     }
 
 
-
     /**
      * 创建mysql的插入sql
      *
@@ -286,10 +293,10 @@ class SqlHelperHandler {
      * @return
      */
     static List<String> createPostInsertSql(String table,
-                                             List<Map<String, Object>> metadata,
-                                             List<String> columns,
-                                             Map<String, String> typeZip,
-                                             String currentNo) {
+                                            List<Map<String, Object>> metadata,
+                                            List<String> columns,
+                                            Map<String, String> typeZip,
+                                            String currentNo) {
         List<String> insertLists = Lists.newArrayList();
         int sequence = 0;
         Map<String, Object> metadatum;
@@ -308,8 +315,8 @@ class SqlHelperHandler {
                     sql.replace(sql.lastIndexOf(","), sql.lastIndexOf(",") + 1, "");
                     insertLists.add(sql.toString());
                 }
-                sql = new StringBuilder().append(" INSERT  INTO public.").append(table).append(" (")
-                        .append(String.join(",", columns)).append(")")
+                sql = new StringBuilder().append(" INSERT  INTO public.").append(table).append(" (\"")
+                        .append(String.join("\",\"", columns)).append("\")")
                         .append(" VALUES  ");
                 sequence = 0;
             }
