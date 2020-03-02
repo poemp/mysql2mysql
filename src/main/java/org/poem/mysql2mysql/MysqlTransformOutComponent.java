@@ -2,16 +2,12 @@ package org.poem.mysql2mysql;
 
 import com.google.common.collect.Lists;
 import org.poem.config.ContextDatabase;
-import org.poem.utils.DataSourceDriverHelper;
 import org.poem.utils.SqlUtils;
 import org.poem.vo.DataTransformTaskVO;
-import org.poem.vo.EnumDataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.util.CollectionUtils;
 
-import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
