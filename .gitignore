@@ -29,6 +29,5 @@ build/
 
 ### VS Code ###
 .vscode/
-!/.mvn/
-!/.idea/
-!/09-mysql2myql.iml
+.mvn
+.idea/
